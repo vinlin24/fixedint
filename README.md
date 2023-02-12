@@ -3,7 +3,7 @@
 
 Custom implementation of fixed-size integer classes in Python.
 
-A nice learning exercise on bit manipulation as well as a refresher on more advanced Python topics such as operator overloading, function closures, and the class factory design pattern.
+A nice learning exercise on bit manipulation as well as a refresher on more advanced Python topics such as operator overloading, function closures, and the class factory and singleton design patterns.
 
 
 ## Setup
@@ -32,11 +32,12 @@ pip install -e .
 Import the `FixedInt` class factory and call it to create classes representing integers with specific bit widths.
 
 ```python
-from fixedint import FixedInt
+from fixedint import FixedInt, FixedSignedInt, FixedUnsignedInt
 
 # Create FixedIntTypes.
-Int8 = FixedInt(8)
-UInt8 = FixedInt(8, signed=False)
+UInt12 = FixedInt(12, signed=False)
+Int8 = FixedSignedInt(8)
+UInt8 = FixedUnsignedInt(8)
 
 # Create instances of the FixedIntTypes.
 foo = UInt8(5)
@@ -51,9 +52,9 @@ print(foo, bar)  # 5 -56
 Easily get the zero-padded, Two's complement binary representation:
 
 ```python
->>> FixedInt(8)(101).as_binary()
+>>> FixedSignedInt(8)(101).as_binary()
 '01100101'
->>> FixedInt(8)(-45).as_binary()
+>>> FixedSignedInt(8)(-45).as_binary()
 '11010011'
 ```
 
@@ -70,7 +71,7 @@ Supports operations between other `FixedIntType`s. The returned type is the type
 
 ```python
 >>> num3 = UInt8(100)
->>> num4 = FixedInt(12)(2040)
+>>> num4 = FixedSignedInt(12)(2040)
 >>> num3 - num4  # Overflows
 FixedInt(size=8, signed=False)(108)
 >>> num4 - num3
@@ -87,6 +88,24 @@ FixedInt(size=8, signed=True)(40)
 >>> type(_)
 <class 'int'>
 ```
+
+Polymorphic inheritance checking:
+
+```python
+>>> from fixedint import FixedIntType, FixedSignedInt
+>>> num1 = FixedSignedInt(10)(25)
+>>> num2 = FixedSignedInt(10)(40)
+>>> type(num1) is type(num2)
+True
+>>> isinstance(num1, FixedSignedInt(10))
+True
+>>> isinstance(num1, FixedIntType)
+True
+>>> isinstance(num1, int)
+True
+```
+
+All types created by the `FixedInt()` and its factory wrapper functions are **interned** within the `FixedIntType` parent class. This class can be imported for use as a type hint but also doubles as a singleton manager. All numbers with the same (size, signed) properties are guaranteed to share the same class object in memory.
 
 
 ## Testing
