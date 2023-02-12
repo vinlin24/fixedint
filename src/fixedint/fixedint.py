@@ -3,14 +3,52 @@
 Implement the FixedInt class factory.
 """
 
-from typing import Any, Callable, Type, TypeVar
+from typing import Any, Callable, Dict, Optional, Tuple, Type, TypeVar
 
 
-def FixedInt(size: int, signed: bool = True):
+class FixedIntType:
+    """
+    Secondary base class for the internal `FixedIntInstance` class
+    defined and returned from `FixedInt()`.  This class is made
+    available for use as a type hint and for inheritance type checking
+    like::
+
+        fixed_num = FixedInt(12)(65)
+        if isinstance(fixed_num, FixedIntType):
+            print("fixed_num is a fixed size integer.")
+
+    This class is also a singleton class manager for all
+    `FixedIntInstance` classes created during runtime. This ensures that
+    the classes of numbers with the same (size, signed) properties are
+    one and the same::
+
+        num1 = FixedInt(36, signed=False)(450)
+        num2 = FixedInt(36, signed=False)(2744)
+        print(type(num1) is type(num2))  # True
+    """
+    _classes: Dict[Tuple[int, bool], Type["FixedIntType"]] = {}
+
+    @classmethod
+    def get_class(cls, size: int, signed: bool
+                  ) -> Optional[Type["FixedIntType"]]:
+        return cls._classes.get((size, signed))
+
+    @classmethod
+    def add_class(cls, new_cls: Type["FixedIntType"]) -> None:
+        key = (new_cls.SIZE, new_cls.SIGNED)  # type: ignore
+        cls._classes[key] = new_cls
+
+
+def FixedInt(size: int, signed: bool = True) -> Type[FixedIntType]:
     """Class factory for int subclasses with fixed number of bits."""
 
     if not (isinstance(size, int) and size > 0):
         raise ValueError("Number of bits must be a positive integer.")
+
+    # Class already interned
+    cls =  FixedIntType.get_class(size, signed)
+    if cls is not None:
+        return cls
 
     def calculate_max_value() -> int:
         umax = (1 << size) - 1
@@ -27,13 +65,13 @@ def FixedInt(size: int, signed: bool = True):
 
     T = TypeVar("T")
 
-    class FixedIntType(int):
+    class FixedIntInstance(int, FixedIntType):
         SIZE: int = size
         SIGNED: bool = signed
         MAX_VALUE: int = calculate_max_value()
         MIN_VALUE: int = calculate_min_value()
 
-        def __new__(cls, value: int) -> "FixedIntType":
+        def __new__(cls, value: int) -> "FixedIntInstance":
             lower_size_ones = (1 << size) - 1
             lower_bits = int(value) & lower_size_ones
             return super().__new__(cls, lower_bits)
@@ -61,7 +99,7 @@ def FixedInt(size: int, signed: bool = True):
         def __ge__(self, other: Any) -> bool:
             return self.as_decimal() >= other
 
-        def __add__(self, other: Any) -> "FixedIntType":
+        def __add__(self, other: Any) -> "FixedIntInstance":
             return operation_wrapper(self, other,
                                      lambda x, y: x + y,
                                      self.__class__)
@@ -71,7 +109,7 @@ def FixedInt(size: int, signed: bool = True):
                                      lambda x, y: y + x,
                                      other.__class__)
 
-        def __sub__(self, other: Any) -> "FixedIntType":
+        def __sub__(self, other: Any) -> "FixedIntInstance":
             return operation_wrapper(self, other,
                                      lambda x, y: x - y,
                                      self.__class__)
@@ -81,7 +119,7 @@ def FixedInt(size: int, signed: bool = True):
                                      lambda x, y: y - x,
                                      other.__class__)
 
-        def __mul__(self, other: Any) -> "FixedIntType":
+        def __mul__(self, other: Any) -> "FixedIntInstance":
             return operation_wrapper(self, other,
                                      lambda x, y: x * y,
                                      self.__class__)
@@ -91,7 +129,7 @@ def FixedInt(size: int, signed: bool = True):
                                      lambda x, y: y * x,
                                      other.__class__)
 
-        def __truediv__(self, other: Any) -> "FixedIntType":
+        def __truediv__(self, other: Any) -> "FixedIntInstance":
             return operation_wrapper(self, other,
                                      lambda x, y: x / y,
                                      self.__class__)
@@ -101,7 +139,7 @@ def FixedInt(size: int, signed: bool = True):
                                      lambda x, y: y / x,
                                      other.__class__)
 
-        def __floordiv__(self, other: Any) -> "FixedIntType":
+        def __floordiv__(self, other: Any) -> "FixedIntInstance":
             return operation_wrapper(self, other,
                                      lambda x, y: x // y,
                                      self.__class__)
@@ -111,7 +149,7 @@ def FixedInt(size: int, signed: bool = True):
                                      lambda x, y: y // x,
                                      other.__class__)
 
-        def __mod__(self, other: Any) -> "FixedIntType":
+        def __mod__(self, other: Any) -> "FixedIntInstance":
             return operation_wrapper(self, other,
                                      lambda x, y: x % y,
                                      self.__class__)
@@ -121,11 +159,11 @@ def FixedInt(size: int, signed: bool = True):
                                      lambda x, y: y % x,
                                      other.__class__)
 
-        def __neg__(self) -> "FixedIntType":
+        def __neg__(self) -> "FixedIntInstance":
             twos_complement = ~self.real + 1
             return self.__class__(twos_complement)
 
-        def __abs__(self) -> "FixedIntType":
+        def __abs__(self) -> "FixedIntInstance":
             return self.__class__(abs(self.real))
 
         # NOTE: More operations may need to be overridden, and the above
@@ -157,4 +195,7 @@ def FixedInt(size: int, signed: bool = True):
         except AttributeError:
             return NotImplemented
 
-    return FixedIntType
+    # Intern the class we just defined
+    FixedIntType.add_class(FixedIntInstance)
+
+    return FixedIntInstance
