@@ -204,6 +204,16 @@ class TestFixedInt(unittest.TestCase):
         fixed2 = UInt12(100)
         self._assert_cross_fixed_combos(fixed1, fixed2, lambda x, y: x // y)
 
+    def test_inheritance(self) -> None:
+        fixed = UInt12(1000)
+        self.assertIsInstance(fixed, FixedIntType)
+        self.assertIsInstance(fixed, int)
+
+    def test_type_internment(self) -> None:
+        fixed1 = FixedInt(36, signed=False)(450)
+        fixed2 = FixedInt(36, signed=False)(2744)
+        self.assertIs(type(fixed1), type(fixed2))
+
 
 if __name__ == "__main__":
     unittest.main()
