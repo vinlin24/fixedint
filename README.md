@@ -114,8 +114,7 @@ All types created by the `FixedInt()` and its factory wrapper functions are **in
 I've included a unit test script to sanity check the behavior of `FixedIntType` instances and how they interact with each other and with the built-in `int`:
 
 ```sh
-cd test
-python -m unittest
+make test
 ```
 
 `FixedIntType` itself subclasses the built-in `int`, allowing it to be treated as one almost anywhere a normal `int` would. Obviously, this practice is always a double-edged sword because my custom type might also break some internals of the normal `int`, causing strange bugs.
