@@ -8,11 +8,9 @@ Unit tester program for the FixedInt class factory.
 import unittest
 from typing import Any, Callable, Type
 
-from fixedint import FixedInt
+from fixedint import FixedInt, FixedIntType
 
 __author__ = "Vincent Lin"
-
-FixedIntType = FixedInt(1)  # Just for the type hint
 
 Int8 = FixedInt(8, signed=True)
 UInt8 = FixedInt(8, signed=False)

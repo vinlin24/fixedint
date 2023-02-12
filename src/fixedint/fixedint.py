@@ -3,29 +3,51 @@
 Implement the FixedInt class factory.
 """
 
+from abc import ABCMeta, abstractmethod
 from typing import Any, Callable, Dict, Optional, Tuple, Type, TypeVar
 
 
-class FixedIntType:
+class FixedIntType(int, metaclass=ABCMeta):
     """
-    Secondary base class for the internal `FixedIntInstance` class
-    defined and returned from `FixedInt()`.  This class is made
-    available for use as a type hint and for inheritance type checking
-    like::
+    Proxy base class for the internal `FixedIntInstance` class defined
+    and returned from `FixedInt()`.  This class is made available for
+    use as a type hint and for inheritance type checking like::
 
         fixed_num = FixedInt(12)(65)
         if isinstance(fixed_num, FixedIntType):
             print("fixed_num is a fixed size integer.")
 
     This class is also a singleton class manager for all
-    `FixedIntInstance` classes created during runtime. This ensures that
-    the classes of numbers with the same (size, signed) properties are
-    one and the same::
+    `FixedIntInstance` classes created during runtime.  This ensures
+    that the classes of numbers with the same (size, signed) properties
+    are one and the same::
 
         num1 = FixedInt(36, signed=False)(450)
         num2 = FixedInt(36, signed=False)(2744)
         print(type(num1) is type(num2))  # True
     """
+    # Define interface of a FixedIntInstance so clients using the
+    # FixedIntType type hint do not get errors.
+
+    SIZE: int = NotImplemented
+    SIGNED: bool = NotImplemented
+    MAX_VALUE: int = NotImplemented
+    MIN_VALUE: int = NotImplemented
+
+    @abstractmethod
+    def __init__(self, value: int) -> None:
+        pass
+
+    @abstractmethod
+    def as_binary(self) -> str:
+        pass
+
+    @abstractmethod
+    def as_decimal(self) -> int:
+        pass
+
+    # Singleton management here.
+
     _classes: Dict[Tuple[int, bool], Type["FixedIntType"]] = {}
 
     @classmethod
@@ -35,7 +57,7 @@ class FixedIntType:
 
     @classmethod
     def add_class(cls, new_cls: Type["FixedIntType"]) -> None:
-        key = (new_cls.SIZE, new_cls.SIGNED)  # type: ignore
+        key = (new_cls.SIZE, new_cls.SIGNED)
         cls._classes[key] = new_cls
 
 
@@ -65,7 +87,7 @@ def FixedInt(size: int, signed: bool = True) -> Type[FixedIntType]:
 
     T = TypeVar("T")
 
-    class FixedIntInstance(int, FixedIntType):
+    class FixedIntInstance(FixedIntType):
         SIZE: int = size
         SIGNED: bool = signed
         MAX_VALUE: int = calculate_max_value()
