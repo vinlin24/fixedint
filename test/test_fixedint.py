@@ -44,11 +44,11 @@ class TestFixedInt(unittest.TestCase):
 
     def test_invalid_sizes(self) -> None:
         with self.assertRaises(ValueError):
-            FixedInt(0)
+            FixedInt(0, signed=True)
         with self.assertRaises(ValueError):
-            FixedInt(-57)
+            FixedInt(-57, signed=True)
         with self.assertRaises(ValueError):
-            FixedInt(4.3)  # type: ignore
+            FixedInt(4.3, signed=True)  # type: ignore
 
     def _assert_equals_combos(self, num: int, cls: Type[FixedIntType]
                               ) -> None:

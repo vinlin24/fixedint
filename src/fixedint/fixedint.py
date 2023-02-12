@@ -61,7 +61,7 @@ class FixedIntType(int, metaclass=ABCMeta):
         cls._classes[key] = new_cls
 
 
-def FixedInt(size: int, signed: bool = True) -> Type[FixedIntType]:
+def FixedInt(size: int, signed: bool) -> Type[FixedIntType]:
     """Class factory for int subclasses with fixed number of bits."""
 
     if not (isinstance(size, int) and size > 0):
@@ -221,3 +221,11 @@ def FixedInt(size: int, signed: bool = True) -> Type[FixedIntType]:
     FixedIntType.add_class(FixedIntInstance)
 
     return FixedIntInstance
+
+
+def FixedSignedInt(size: int) -> Type[FixedIntType]:
+    return FixedInt(size, signed=True)
+
+
+def FixedUnsignedInt(size: int) -> Type[FixedIntType]:
+    return FixedInt(size, signed=False)
