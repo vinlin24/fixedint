@@ -186,7 +186,7 @@ def FixedInt(size: int, signed: bool) -> Type[FixedIntType]:
             return self.__class__(twos_complement)
 
         def __abs__(self) -> "FixedIntInstance":
-            return self.__class__(abs(self.real))
+            return self.__class__(abs(self.as_decimal()))
 
         # NOTE: More operations may need to be overridden, and the above
         # operations may not be fully tested.

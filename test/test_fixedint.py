@@ -204,6 +204,19 @@ class TestFixedInt(unittest.TestCase):
         fixed2 = UInt12(100)
         self._assert_cross_fixed_combos(fixed1, fixed2, lambda x, y: x // y)
 
+    def test_neg_signed(self) -> None:
+        fixed = Int12(700)
+        self.assertEqual(-fixed, -700)
+
+    def test_neg_unsigned(self) -> None:
+        fixed = UInt12(700)
+        self.assertEqual(-fixed, UInt12.MAX_VALUE - 700 + 1)
+
+    def test_abs(self) -> None:
+        neg_one = Int12(-500)
+        pos_one = Int12(500)
+        self.assertEqual(abs(neg_one), abs(pos_one))
+
     def test_inheritance(self) -> None:
         fixed = UInt12(1000)
         self.assertIsInstance(fixed, FixedIntType)
